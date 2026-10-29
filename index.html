@@ -1,0 +1,393 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MAZE TALES | MAZE DINO Puzzle Adventures</title>
+<meta name="description" content="MAZE TALES: a free ad-lib story game. Fill in the blanks, reveal a silly dino tale, and share it.">
+<link rel="icon" href="assets/maze-dino-logo.jpg">
+<style>
+  :root { --bg:#ff2fa8; --card:#fff; --text:#1a1d2e; --muted:#5b6180; --accent:#c4007a; --border:#f3c4e0; --soft:#fff0f8; --ok:#1a9e5c; --err:#c0262d; }
+  * { box-sizing: border-box; }
+  [hidden] { display:none !important; }
+  body { margin:0; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; background:var(--bg); color:var(--text); line-height:1.5; }
+  .wrap { max-width: 720px; margin: 0 auto; padding: 20px 14px 56px; }
+  header { text-align:center; color:#fff; }
+  header img { display:block; width:100%; max-width:360px; height:auto; margin:0 auto 8px; border-radius:16px; box-shadow:0 4px 12px rgba(0,0,0,.25); }
+  h1 { font-size:1.6rem; margin:0; letter-spacing:.04em; }
+  .sub { margin:0; font-size:.9rem; opacity:.95; }
+  .stats { display:flex; gap:8px; margin-top:14px; }
+  .stat { flex:1; background:var(--card); border-radius:12px; padding:8px 10px; text-align:center; }
+  .stat b { display:block; font-size:1.35rem; color:var(--accent); }
+  .stat span { font-size:.75rem; color:var(--muted); }
+  .today { color:#fff; font-size:.85rem; margin:8px 2px 0; text-align:center; }
+  .panel { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:16px; margin-top:12px; }
+  h2 { font-size:1.15rem; margin:0 0 6px; }
+  h3 { font-size:1rem; margin:14px 0 6px; }
+  p { margin:0 0 10px; }
+  .muted { color:var(--muted); font-size:.9rem; }
+  .row { display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
+  .btn { padding:9px 14px; border-radius:8px; border:1px solid var(--accent); background:var(--accent); color:#fff; font-weight:600; font-size:.95rem; cursor:pointer; text-decoration:none; display:inline-block; }
+  .btn.alt { background:transparent; color:var(--accent); }
+  .btn:disabled { opacity:.5; cursor:default; }
+  .daily { background:var(--soft); border:1px dashed var(--accent); border-radius:10px; padding:12px; }
+  .badge { display:inline-block; font-size:.75rem; font-weight:700; color:#fff; background:var(--accent); border-radius:999px; padding:1px 8px; margin-left:6px; vertical-align:middle; }
+  .badge.done { background:var(--ok); }
+  .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:8px; }
+  .pick { text-align:left; border:1px solid var(--border); background:var(--soft); border-radius:10px; padding:10px 12px; cursor:pointer; font:inherit; color:var(--text); }
+  .pick b { display:block; color:var(--accent); }
+  .pick span { font-size:.8rem; color:var(--muted); }
+  .field { display:block; margin:8px 0; }
+  .field span { display:block; font-size:.85rem; color:var(--muted); margin-bottom:2px; }
+  .field input { width:100%; font:inherit; padding:9px 10px; border:1px solid var(--border); border-radius:8px; }
+  .field input.bad { border-color:var(--err); }
+  .err { color:var(--err); font-weight:600; min-height:1.4em; }
+  label.chk { font-size:.9rem; color:var(--muted); display:flex; gap:6px; align-items:center; margin:8px 0; }
+  .story { font-size:1.08rem; line-height:1.75; background:var(--soft); border:1px solid var(--border); border-radius:10px; padding:14px 16px; margin:8px 0 12px; }
+  .story mark { background:#ffd6ee; color:var(--accent); font-weight:700; border-radius:4px; padding:0 3px; }
+  .msg { font-weight:600; color:var(--ok); min-height:1.4em; }
+  .shelf { display:flex; flex-direction:column; gap:6px; margin-top:6px; }
+  .shelf .item { display:flex; align-items:center; gap:8px; border:1px solid var(--border); border-radius:8px; padding:6px 10px; background:var(--soft); }
+  .shelf .item .t { flex:1; font-weight:600; }
+  .shelf .item .d { font-size:.8rem; color:var(--muted); }
+  .shelf button { border:1px solid var(--accent); background:#fff; color:var(--accent); border-radius:6px; padding:4px 10px; font-weight:600; cursor:pointer; }
+  #toast { position:fixed; left:50%; bottom:22px; transform:translateX(-50%); background:#1a1d2e; color:#fff; padding:10px 16px; border-radius:10px; font-weight:600; opacity:0; pointer-events:none; transition:opacity .2s; max-width:90vw; text-align:center; }
+  #toast.show { opacity:1; }
+  .note { color:#fff; font-size:.82rem; margin-top:24px; text-align:center; }
+  .note a { color:#fff; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <img src="assets/maze-dino-logo.jpg" alt="MAZE DINO: Puzzle Adventures" width="360" height="196" onerror="this.style.display='none'">
+    <h1>MAZE TALES</h1>
+    <p class="sub">Fill in the blanks. Reveal a silly tale.</p>
+  </header>
+
+  <div class="stats" aria-live="polite">
+    <div class="stat"><b id="points">0</b><span>Points</span></div>
+    <div class="stat"><b id="streak">0</b><span>Day streak</span></div>
+  </div>
+  <p class="today" id="today"></p>
+
+  <!-- HOME -->
+  <div id="v-home">
+    <section class="panel">
+      <div class="daily">
+        <h2>Today's tale <span class="badge" id="dailyBadge">+60</span></h2>
+        <p class="muted" style="margin-bottom:8px"><b id="dailyTitle"></b> &mdash; the same tale for everyone today.</p>
+        <button class="btn" id="playDaily">Play today's tale</button>
+      </div>
+      <h3>More tales</h3>
+      <p class="muted">Each one earns +15 points, up to 3 a day.</p>
+      <div class="grid" id="list"></div>
+    </section>
+
+    <section class="panel">
+      <h2>My tales</h2>
+      <p class="muted" id="shelfEmpty">Nothing saved yet. Reveal a tale and save it here.</p>
+      <div class="shelf" id="shelf"></div>
+    </section>
+
+    <section class="panel">
+      <h2>More from MAZE DINO</h2>
+      <div class="row">
+        <a class="btn alt" href="https://aiontrust.github.io/maze-dino-daily/">Dino Daily</a>
+        <a class="btn alt" href="https://aiontrust.github.io/maze-dino/">MAZE DINO maze game</a>
+      </div>
+    </section>
+  </div>
+
+  <!-- FILL -->
+  <section class="panel" id="v-fill" hidden>
+    <h2 id="fillTitle"></h2>
+    <p class="muted"><span id="fillTag"></span>. Fill in every blank. You won't see the story until you reveal it.</p>
+    <form id="form" autocomplete="off">
+      <div id="fields"></div>
+      <label class="chk"><input type="checkbox" id="ff" checked> Keep it family-friendly</label>
+      <div class="err" id="fillErr" role="alert"></div>
+      <div class="row">
+        <button class="btn" type="submit">Reveal my tale</button>
+        <button class="btn alt" type="button" id="fillBack">Back</button>
+      </div>
+    </form>
+  </section>
+
+  <!-- READ -->
+  <section class="panel" id="v-read" hidden>
+    <h2 id="readTitle"></h2>
+    <p class="muted" id="readNote" hidden></p>
+    <div class="story" id="story"></div>
+    <div class="msg" id="readMsg"></div>
+    <div class="row">
+      <button class="btn" id="copyStory">Copy story</button>
+      <button class="btn alt" id="copyLink">Copy link</button>
+      <button class="btn alt" id="saveTale">Save to My tales</button>
+    </div>
+    <div class="row" style="margin-top:10px">
+      <button class="btn alt" id="again">Play another tale</button>
+      <button class="btn alt" id="home">Home</button>
+    </div>
+  </section>
+
+  <p class="note">
+    Points and your day streak are saved only in this browser and are shared with Dino Daily. They are not MAZE tokens and have no cash value.<br>
+    $MAZE contract: <a href="https://etherscan.io/token/0x2F4f8d5094298BD4ddd774011bd0917052f4d1d2">0x2F4f8d5094298BD4ddd774011bd0917052f4d1d2</a>
+  </p>
+</div>
+<div id="toast" role="status"></div>
+
+<script>
+(() => {
+'use strict';
+
+// ---- Pure helpers (no DOM) ----
+//#pure-start
+const STORIES = [
+  {id:'lost-dino', title:'The Dino Who Lost the Maze',
+   blanks:['adjective','food','animal','verb ending in -ing','silly sound','number','color','plural noun','place','past-tense verb','adverb'],
+   text:'Deep inside the MAZE, a {0} pink dino woke up with a rumbling tummy. "I could really go for some {1}," said the dino. A tiny {2} hurried by, {3} down the hall. "Follow me!" it said with a loud {4}. The two friends walked past {5} {6} doors and a hallway full of {7}. At the end of a twisty path they found a {8}, where the dino {9} {10} and finally got its snack. The end... or is it? The maze just changed again!'},
+  {id:'city-rally', title:'City Rally Chaos',
+   blanks:['name of a friend','adjective','plural noun','number','noun','place','exclamation','verb ending in -ing','past-tense verb','food','animal','noun'],
+   text:'Today is the big city rally! {0} grabbed a {1} map and a backpack full of {2}. Checkpoint number {3} was hiding behind a {4} in {5}. "{6}!" shouted {0} after scanning the QR code and {7} down the street. The next clue said: find the {9} that a {10} guards at midnight. The whole team {8}, solved it together, and crossed the finish line holding a golden {11}.'},
+  {id:'gallery-night', title:'Gallery Opening Night',
+   blanks:['adjective','name of a friend','color','noun','plural noun','verb','silly sound','food','adverb','number','past-tense verb'],
+   text:'It was opening night at the {0} gallery. {1} had painted a huge {2} picture of a {3} wearing a hat. Guests walked in carrying {4}, ready to {5} with joy. When the painting said "{6}!" everyone gasped. The snack table ran out of {7} and the crowd cheered {8}. By {9} o\'clock the whole room {10} and asked for an encore.'},
+  {id:'tip-jar', title:'The Mystery of the Tip Jar',
+   blanks:['name of a friend','adjective','noun','plural noun','verb ending in -ing','animal','number','past-tense verb','adverb','color','silly sound'],
+   text:'Someone left a {1} jar on the counter of the dino cafe, and nobody knew why. {0} peeked inside and found a {2}, {6} {3}, and a note that said: "Thank you for {4}!" Just then a {5} {7} through the door {8}, wearing a {9} cape and shouting "{10}!" It turns out the jar was a surprise thank-you gift for the nicest dino in town.'},
+  {id:'daily-detective', title:'The Dino Daily Detective',
+   blanks:['adjective','name of a friend','noun','plural noun','verb','number','place','past-tense verb','food','animal','exclamation'],
+   text:'Every morning the puzzle board in {6} had a new riddle, but today the tiles were all {0} and out of order! Detective {1} grabbed a magnifying {2} and followed {5} clues made of {3}. "{10}!" cried the detective. A sneaky {9} had {7} off with the last tile and left a trail of {8}. All it took was one clever move to {4} the puzzle and save the day.'},
+  {id:'monster-mix', title:'The Mix & Match Monster',
+   blanks:['color','animal','body part','adjective','number','food','silly sound','verb ending in -ing','past-tense verb','place','adverb'],
+   text:'In the Mix & Match lab, the dino built a hybrid with the head of a {0} {1}, the {2} of a {3} dragon, and {4} spiky tails. It loved to eat {5} and made a {6} sound whenever it was {7}. One day it {8} all the way to {9} and waved {10} at the crowd. Everyone agreed it was the best dino ever invented.'},
+  {id:'center-treasure', title:'Treasure at the Center',
+   blanks:['adjective','name of a friend','noun','plural noun','verb ending in -ing','color','number','past-tense verb','animal','silly sound','adverb'],
+   text:'The oldest legend in the MAZE says there is a {0} treasure at the very center. {1} packed a {2}, {6} snacks, and a bag of {3}, then set off {4} through the twisty halls. A {5} door slammed shut, but a {8} whispered "{9}" and the door {7} open. At the center they found the treasure: a chest that opened {10} and played a happy song.'},
+  {id:'dino-space', title:'Dino in Space',
+   blanks:['adjective','noun','number','verb ending in -ing','plural noun','food','animal','past-tense verb','place','silly sound','color'],
+   text:'Captain Dino strapped on a {0} helmet and launched a {1} into space. Countdown: {2}... blast off! Soon the crew was {3} past a cloud of {4} and snacking on {5}. A space {6} {7} onto the ship and said "{9}!" It pointed to a {10} planet called {8}, and the dino knew the next adventure had begun.'}
+];
+
+function hash(s){let h=1779033703^s.length;for(let i=0;i<s.length;i++){h=Math.imul(h^s.charCodeAt(i),3432918353);h=h<<13|h>>>19;}h=Math.imul(h^h>>>16,2246822507);h=Math.imul(h^h>>>13,3266489909);return(h^h>>>16)>>>0;}
+const dailyIndex = day => hash(day + '-tale') % STORIES.length;
+
+// Basic family-friendly filter. Words are stored ROT13-encoded so the source stays readable.
+const rot = s => s.replace(/[a-z]/g, c => String.fromCharCode((c.charCodeAt(0) - 97 + 13) % 26 + 97));
+const BLOCK = new Set();
+['shpx','fuvg','ovgpu','nffubyr','onfgneq','qnza','penc','cvff','cbea','frk','ahqr','anmv','encr','xvyy','zheqre','fhvpvqr','fyhg','juber','qvpx','pbpx','chffl','phag','avttre','avttn','snt','ergneq'].forEach(e => {
+  const w = rot(e);
+  ['', 's', 'es', 'ed', 'er', 'ers', 'ing', 'y'].forEach(x => BLOCK.add(w + x));
+});
+function isBlocked(word){
+  const t = String(word).toLowerCase().replace(/[0@]/g,m=>m==='0'?'o':'a').replace(/1|!/g,'i').replace(/3/g,'e').replace(/4/g,'a').replace(/5|\$/g,'s').replace(/7/g,'t');
+  if (BLOCK.has(t.replace(/[^a-z]/g, ''))) return true;
+  return t.split(/[^a-z]+/).some(p => p && BLOCK.has(p));
+}
+const cleanWord = w => String(w).replace(/\s+/g, ' ').trim().slice(0, 24);
+
+function enc(words){const b=new TextEncoder().encode(JSON.stringify(words));let s='';b.forEach(x=>s+=String.fromCharCode(x));return btoa(s).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');}
+function dec(str){try{const s=atob(String(str).replace(/-/g,'+').replace(/_/g,'/'));const b=Uint8Array.from(s,c=>c.charCodeAt(0));const a=JSON.parse(new TextDecoder().decode(b));return Array.isArray(a)?a.map(x=>cleanWord(x)):null;}catch(e){return null;}}
+function storyText(story, words){return story.text.replace(/\{(\d+)\}/g,(m,i)=>words[+i]);}
+//#pure-end
+
+// ---- Dates and the points store shared with Dino Daily ----
+const pad = n => String(n).padStart(2, '0');
+const dayStr = (d = new Date()) => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const yesterdayStr = () => { const d = new Date(); d.setDate(d.getDate() - 1); return dayStr(d); };
+const $ = s => document.querySelector(s);
+
+// Same key and shape as Dino Daily, so points and the day streak are shared.
+const KEY = 'mazeDinoDaily.v1';
+const blankStore = () => ({points:0, streak:0, lastDay:'', done:{}, collection:[]});
+let mem = null;
+function loadStore(){
+  try { const r = localStorage.getItem(KEY); if (r) return Object.assign(blankStore(), JSON.parse(r)); } catch (e) {}
+  return mem || blankStore();
+}
+function saveStore(s){ mem = s; try { localStorage.setItem(KEY, JSON.stringify(s)); } catch (e) {} }
+
+// Saved tales live under their own key so they never touch Dino Daily's collection.
+const TKEY = 'mazeTales.v1';
+function loadShelf(){ try { const r = JSON.parse(localStorage.getItem(TKEY)); if (r && Array.isArray(r.shelf)) return r.shelf; } catch (e) {} return memShelf; }
+let memShelf = [];
+function saveShelf(shelf){ memShelf = shelf; try { localStorage.setItem(TKEY, JSON.stringify({shelf})); } catch (e) {} }
+
+const doneToday = s => (s.done && s.done[dayStr()]) || {};
+
+// Always re-reads the store first, so a change made in another tab (Dino Daily) is never overwritten.
+function award(pts, key, val){
+  const s = loadStore(), today = dayStr();
+  let bonus = 0;
+  if (s.lastDay !== today) {
+    s.streak = s.lastDay === yesterdayStr() ? s.streak + 1 : 1;
+    s.lastDay = today;
+    bonus = Math.min(50, s.streak * 5);
+  }
+  s.points += pts + bonus;
+  s.done = {[today]: Object.assign({}, s.done && s.done[today], {[key]: val})};
+  saveStore(s);
+  renderStats();
+  return {pts, bonus};
+}
+
+let toastTimer;
+function toast(msg){ const t = $('#toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), 2800); }
+
+const dailyIdx = dailyIndex(dayStr());
+
+function renderStats(){
+  const s = loadStore(), today = dayStr(), live = s.lastDay === today || s.lastDay === yesterdayStr();
+  $('#points').textContent = s.points;
+  $('#streak').textContent = live ? s.streak : 0;
+  const d = doneToday(s);
+  $('#today').textContent = `Today: Daily tale ${d.tale ? '✓' : '○'}  ·  Practice tales ${Math.min(3, +d.tales || 0)}/3`;
+}
+
+// ---- Views ----
+function show(v){
+  ['home','fill','read'].forEach(x => $('#v-' + x).hidden = x !== v);
+  window.scrollTo(0, 0);
+}
+
+function renderHome(){
+  const s = loadStore(), d = doneToday(s);
+  $('#dailyTitle').textContent = STORIES[dailyIdx].title;
+  const b = $('#dailyBadge'); b.textContent = d.tale ? 'Done ✓' : '+60'; b.className = 'badge' + (d.tale ? ' done' : '');
+  const list = $('#list'); list.textContent = '';
+  STORIES.forEach((st, i) => {
+    const btn = document.createElement('button'); btn.className = 'pick'; btn.type = 'button';
+    const t = document.createElement('b'); t.textContent = st.title;
+    const n = document.createElement('span'); n.textContent = `${st.blanks.length} blanks` + (i === dailyIdx ? ' · today\'s tale' : '');
+    btn.append(t, n); btn.onclick = () => startStory(i);
+    list.appendChild(btn);
+  });
+  renderShelf();
+  renderStats();
+  show('home');
+}
+
+function renderShelf(){
+  const shelf = loadShelf(), box = $('#shelf'); box.textContent = '';
+  $('#shelfEmpty').hidden = shelf.length > 0;
+  shelf.forEach((it, idx) => {
+    const st = STORIES.find(x => x.id === it.id); if (!st) return;
+    const row = document.createElement('div'); row.className = 'item';
+    const t = document.createElement('span'); t.className = 't'; t.textContent = st.title;
+    const dd = document.createElement('span'); dd.className = 'd'; dd.textContent = it.day || '';
+    const read = document.createElement('button'); read.textContent = 'Read'; read.onclick = () => showRead(st, it.words, {});
+    const del = document.createElement('button'); del.textContent = '×'; del.setAttribute('aria-label', 'Remove saved tale');
+    del.onclick = () => { const a = loadShelf(); a.splice(idx, 1); saveShelf(a); renderShelf(); };
+    row.append(t, dd, read, del); box.appendChild(row);
+  });
+}
+
+let cur = null; // {i, s}
+const cap = t => t.charAt(0).toUpperCase() + t.slice(1);
+
+function startStory(i){
+  const s = STORIES[i]; cur = {i, s};
+  $('#fillTitle').textContent = s.title;
+  $('#fillTag').textContent = i === dailyIdx ? "Today's tale (bonus points)" : 'Practice tale';
+  $('#fillErr').textContent = '';
+  const box = $('#fields'); box.textContent = '';
+  s.blanks.forEach((t, k) => {
+    const lab = document.createElement('label'); lab.className = 'field';
+    const sp = document.createElement('span'); sp.textContent = `${k + 1}. ${cap(t)}`;
+    const inp = document.createElement('input'); inp.type = 'text'; inp.maxLength = 24; inp.id = 'f' + k; inp.setAttribute('autocomplete', 'off');
+    inp.addEventListener('keydown', e => {
+      if (e.key !== 'Enter') return;
+      const nx = $('#f' + (k + 1));
+      if (nx) { e.preventDefault(); nx.focus(); }
+    });
+    lab.append(sp, inp); box.appendChild(lab);
+  });
+  show('fill');
+  const f = $('#f0'); if (f) f.focus();
+}
+
+function submitFill(e){
+  e.preventDefault();
+  const s = cur.s, words = [], err = $('#fillErr');
+  document.querySelectorAll('#fields input').forEach(i => i.classList.remove('bad'));
+  for (let k = 0; k < s.blanks.length; k++) {
+    const inp = $('#f' + k), w = cleanWord(inp.value);
+    if (!w) { inp.classList.add('bad'); inp.focus(); err.textContent = 'Fill in every blank.'; return; }
+    if ($('#ff').checked && isBlocked(w)) { inp.classList.add('bad'); inp.focus(); err.textContent = "Let's keep it family-friendly. Try another word."; return; }
+    words.push(w);
+  }
+  err.textContent = '';
+  showRead(s, words, {reward: reward(cur.i)});
+}
+
+function reward(i){
+  const d = doneToday(loadStore());
+  const fmt = r => `+${r.pts} points` + (r.bonus ? ` (+${r.bonus} streak bonus)` : '');
+  if (i === dailyIdx) {
+    if (d.tale) return "You already earned today's tale bonus.";
+    return "Today's tale: " + fmt(award(60, 'tale', true));
+  }
+  const n = +d.tales || 0;
+  if (n >= 3) return 'You have earned the 3 practice tales for today. Come back tomorrow!';
+  return 'Nice tale! ' + fmt(award(15, 'tales', n + 1));
+}
+
+let shown = null; // {s, words}
+function showRead(s, words, opts){
+  shown = {s, words};
+  $('#readTitle').textContent = s.title;
+  const note = $('#readNote');
+  if (opts.note) { note.textContent = opts.note; note.hidden = false; } else note.hidden = true;
+  const box = $('#story'); box.textContent = '';
+  s.text.split(/(\{\d+\})/).forEach(part => {
+    const m = /^\{(\d+)\}$/.exec(part);
+    if (m) { const mk = document.createElement('mark'); mk.textContent = words[+m[1]]; box.appendChild(mk); }
+    else if (part) box.appendChild(document.createTextNode(part));
+  });
+  $('#readMsg').textContent = opts.reward || '';
+  show('read');
+}
+
+function copyText(text, okMsg){
+  (navigator.clipboard ? navigator.clipboard.writeText(text) : Promise.reject()).then(
+    () => toast(okMsg),
+    () => toast('Copy was blocked. Select the text and copy it by hand.')
+  );
+}
+$('#form').addEventListener('submit', submitFill);
+$('#fillBack').onclick = renderHome;
+$('#home').onclick = () => { history.replaceState(null, '', location.pathname + location.search); renderHome(); };
+$('#playDaily').onclick = () => startStory(dailyIdx);
+$('#again').onclick = () => {
+  const d = doneToday(loadStore());
+  let pool = STORIES.map((_, i) => i).filter(i => !(cur && i === cur.i));
+  const fresh = pool.filter(i => i !== dailyIdx || !d.tale);
+  if (fresh.length) pool = fresh;
+  startStory(pool[Math.floor(Math.random() * pool.length)]);
+};
+$('#copyStory').onclick = () => copyText(storyText(shown.s, shown.words), 'Story copied');
+$('#copyLink').onclick = () => copyText(location.href.split('#')[0] + '#s=' + shown.s.id + '&w=' + enc(shown.words), 'Link copied');
+$('#saveTale').onclick = () => {
+  const shelf = loadShelf();
+  if (shelf.length >= 20) return toast('Your shelf is full (20). Remove one first.');
+  shelf.unshift({id: shown.s.id, words: shown.words, day: dayStr()});
+  saveShelf(shelf); toast('Saved to My tales');
+};
+
+// ---- Start ----
+const mh = /^#s=([a-z-]+)&w=([A-Za-z0-9_-]+)$/.exec(location.hash);
+const sharedStory = mh && STORIES.find(x => x.id === mh[1]);
+const sharedWords = sharedStory && dec(mh[2]);
+renderHome();
+if (sharedStory && sharedWords && sharedWords.length === sharedStory.blanks.length) {
+  // Words from a link are untrusted: filtered and shown as plain text only.
+  const safe = sharedWords.map(w => (!w || isBlocked(w)) ? '☆' : w);
+  showRead(sharedStory, safe, {note: 'Someone shared this tale with you. Reading it earns no points.'});
+}
+})();
+</script>
+</body>
+</html>

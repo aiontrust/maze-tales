@@ -298,6 +298,9 @@ function startStory(i){
     const lab = document.createElement('label'); lab.className = 'field';
     const sp = document.createElement('span'); sp.textContent = `${k + 1}. ${cap(t)}`;
     const inp = document.createElement('input'); inp.type = 'text'; inp.maxLength = 24; inp.id = 'f' + k; inp.setAttribute('autocomplete', 'off');
+    // Phones capitalize the first letter by default, which looks odd mid-sentence. Only names and places keep capitals.
+    inp.setAttribute('autocapitalize', /name|place/.test(t) ? 'words' : 'none');
+    inp.setAttribute('autocorrect', 'off'); inp.spellcheck = false;
     inp.addEventListener('keydown', e => {
       if (e.key !== 'Enter') return;
       const nx = $('#f' + (k + 1));

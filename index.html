@@ -6,6 +6,9 @@
 <title>MAZE TALES | MAZE DINO Puzzle Adventures</title>
 <meta name="description" content="MAZE TALES: a free ad-lib story game. Fill in the blanks, reveal a silly dino tale, and share it.">
 <link rel="icon" href="assets/maze-dino-logo.jpg">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#ff2fa8">
+<link rel="apple-touch-icon" href="icon-192.png">
 <style>
   :root { --bg:#ff2fa8; --card:#fff; --text:#1a1d2e; --muted:#5b6180; --accent:#c4007a; --border:#f3c4e0; --soft:#fff0f8; --ok:#1a9e5c; --err:#c0262d; }
   * { box-sizing: border-box; }
@@ -396,6 +399,12 @@ if (sharedStory && sharedWords && sharedWords.length === sharedStory.blanks.leng
   showRead(sharedStory, safe, {note: 'Someone shared this tale with you. Reading it earns no points.'});
 }
 })();
+</script>
+<script>
+// Offline support: remember this game so it opens without a connection.
+if ("serviceWorker" in navigator && /^https?:$/.test(location.protocol)) {
+  window.addEventListener("load", function () { navigator.serviceWorker.register("sw.js").catch(function () {}); });
+}
 </script>
 </body>
 </html>

@@ -13,12 +13,21 @@ A free ad-lib story game for the MAZE DINO – Puzzle Adventures platform. One s
 | --- | --- |
 | `index.html` | The whole game (HTML, CSS, JS, and all stories) |
 | `assets/maze-dino-logo.jpg` | The MAZE DINO logo banner, same file as the other two games |
+| `sw.js`, `manifest.webmanifest` | Offline support and install (see below) |
+| `icon-192.png`, `icon-512.png` | App icons for the home screen |
 
 ## Publish on GitHub Pages
 
 1. Put `index.html` in the root of the `maze-tales` repo and the logo at `assets/maze-dino-logo.jpg`.
 2. Settings → Pages → "Deploy from a branch" → `main` → `/ (root)`.
 3. The game appears at `https://aiontrust.github.io/maze-tales/`.
+
+## Offline and install
+
+- After one visit online, MAZE TALES opens without a connection. Points, streak, saved tales and share links all keep working.
+- When you are online the newest page is always loaded; the saved copy is only used when there is no connection.
+- **Install:** on iPhone use Safari → Share → Add to Home Screen. On Android use the Chrome menu → Install app. It then opens full screen with the MAZE dino icon.
+- If a phone keeps showing an old logo or icon, change the version name in `sw.js` (`mdd-tales-v1` to `mdd-tales-v2`), commit, and open the game online once.
 
 ## Points (shared with Dino Daily)
 
